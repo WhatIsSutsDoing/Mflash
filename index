@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>M Formula Flashcards</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.0/index.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk@5.0.0/index.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.0/index.css" />
+<style>
+  :root {
+    --bg: #12141A;
+    --panel: #1A1E27;
+    --panel2: #222733;
+    --line: #2C3140;
+    --keyword: #E3A548;
+    --string: #8FBC9F;
+    --text: #ECEEF2;
+    --muted: #8890A0;
+    --danger: #E2685F;
+    --success: #6FCF97;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .display { font-family: 'Space Grotesk', sans-serif; }
+
+  button { font-family: inherit; }
+
+  /* ---------------- Levels screen ---------------- */
+  #levels-screen { max-width: 720px; margin: 0 auto; padding: 48px 20px 80px; }
+  .eyebrow { color: var(--keyword); font-size: 13px; letter-spacing: 1px; margin-bottom: 8px; }
+  h1.title { font-size: 34px; font-weight: 700; margin: 0; line-height: 1.15; }
+  .subtitle { color: var(--muted); margin-top: 10px; font-size: 15px; line-height: 1.5; }
+
+  .let-block {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px 8px;
+    font-size: 14.5px;
+    margin-top: 36px;
+  }
+  .let-block .kw { color: var(--keyword); padding: 4px 20px; }
+  .let-block .mastery-line { padding: 0 20px; color: var(--muted); }
+
+  .level-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 10px 20px;
+    margin-left: 12px;
+    cursor: pointer;
+    text-align: left;
+    color: var(--text);
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .level-btn:hover { background: var(--panel2); border-color: rgba(227,165,72,0.33); }
+  .level-btn .lhs { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .level-btn .muted { color: var(--muted); }
+  .level-btn .str { color: var(--string); }
+  .level-btn .rhs { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .dot { width: 6px; height: 6px; border-radius: 99px; background: var(--line); }
+  .dot.some { background: var(--keyword); }
+  .dot.done { background: var(--success); }
+
+  /* ---------------- Card screen ---------------- */
+  #card-screen { max-width: 640px; margin: 0 auto; padding: 28px 20px 60px; min-height: 100vh; display: none; flex-direction: column; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+  .ghost-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: transparent; border: none; color: var(--muted);
+    cursor: pointer; font-size: 14px; padding: 6px 8px; border-radius: 6px;
+  }
+  .ghost-btn:hover { background: var(--panel2); }
+  .header-center { text-align: center; }
+  .header-center .lvl-name { font-weight: 600; font-size: 16px; }
+  .header-center .lvl-pos { color: var(--muted); font-size: 12px; }
+
+  .progress-track { height: 4px; background: var(--line); border-radius: 99px; margin-bottom: 28px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--keyword); transition: width 0.25s; }
+
+  .flip-zone { perspective: 1200px; cursor: pointer; flex: 1; min-height: 380px; }
+  .flip-card {
+    position: relative; width: 100%; height: 380px;
+    transition: transform 0.5s; transform-style: preserve-3d;
+  }
+  .flip-card.flipped { transform: rotateY(180deg); }
+  .face {
+    position: absolute; inset: 0;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    border-radius: 14px; padding: 24px; overflow-y: auto;
+  }
+  .face.front {
+    background: var(--panel); border: 1px solid var(--line);
+    display: flex; flex-direction: column;
+  }
+  .face.back {
+    background: var(--panel2); border: 1px solid rgba(227,165,72,0.33);
+    transform: rotateY(180deg);
+    display: flex; flex-direction: column;
+  }
+  .tag { font-size: 11px; letter-spacing: 1px; margin-bottom: 10px; text-align: center; }
+  .tag.code-tag { text-align: left; color: var(--keyword); }
+  .tag.answer-tag { color: var(--success); }
+  .tag.usecase-tag { color: var(--keyword); }
+  .tag.steps-tag { color: #9BB6E3; }
+
+  pre.code-block {
+    background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; font-size: 13.5px; line-height: 1.5; color: var(--string);
+    white-space: pre-wrap; word-break: break-word; margin: 0 0 14px; max-height: 150px; overflow-y: auto;
+  }
+  .ask-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 6px 4px 0; }
+  .ask-text { font-size: 16.5px; line-height: 1.4; font-weight: 600; }
+  .flip-hint { color: var(--muted); font-size: 12px; margin-top: 12px; }
+
+  .answer-text { font-size: 16px; line-height: 1.5; font-weight: 500; color: var(--string); text-align: center; }
+
+  .section-block { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .usecase-text { color: var(--text); font-size: 13px; line-height: 1.5; text-align: center; }
+
+  ol.steps-list { margin: 0; padding-left: 20px; font-size: 12.5px; line-height: 1.55; color: var(--text); }
+  ol.steps-list li { margin-bottom: 4px; }
+  ol.steps-list li:last-child { color: var(--success); font-weight: 600; margin-bottom: 0; }
+
+  .controls { display: flex; align-items: center; justify-content: space-between; margin-top: 22px; }
+  .nav-btn {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 14px; color: var(--text); cursor: pointer; display: flex; align-items: center;
+  }
+  .nav-btn:hover { background: var(--panel2); }
+  .mid-controls { display: flex; gap: 10px; }
+  .mastery-btn {
+    display: flex; align-items: center; gap: 6px; background: var(--panel);
+    border-radius: 10px; padding: 10px 16px; cursor: pointer; font-size: 13.5px; font-weight: 500;
+  }
+  .mastery-btn:hover { background: var(--panel2); }
+  .review-btn { border: 1px solid rgba(226,104,95,0.4); color: var(--danger); }
+  .know-btn { border: 1px solid rgba(111,207,151,0.4); color: var(--success); }
+
+  svg.icon { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<!-- ===================== LEVELS SCREEN ===================== -->
+<div id="levels-screen">
+  <div class="eyebrow mono">POWER QUERY · M LANGUAGE</div>
+  <h1 class="title display">M Formula Flashcards</h1>
+  <p class="subtitle">10 levels, 10 cards each. Each card shows real M code — figure out what it does, then flip for the answer, a use case, and a step-by-step breakdown.</p>
+
+  <div class="let-block mono" id="let-block">
+    <div class="kw">let</div>
+    <div id="level-list"></div>
+    <div class="kw" style="padding-top:10px;">in</div>
+    <div class="mastery-line">&nbsp;&nbsp;&nbsp;&nbsp;Mastery</div>
+  </div>
+</div>
+
+<!-- ===================== CARD SCREEN ===================== -->
+<div id="card-screen">
+  <div class="card-header">
+    <button class="ghost-btn" id="back-btn">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      Levels
+    </button>
+    <div class="header-center">
+      <div class="lvl-name display" id="lvl-name"></div>
+      <div class="lvl-pos mono" id="lvl-pos"></div>
+    </div>
+    <button class="ghost-btn" id="shuffle-btn">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>
+      Shuffle
+    </button>
+  </div>
+
+  <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+
+  <div class="flip-zone" id="flip-zone">
+    <div class="flip-card" id="flip-card">
+      <div class="face front">
+        <div class="tag code-tag mono">M CODE</div>
+        <pre class="code-block mono" id="card-code"></pre>
+        <div class="ask-wrap">
+          <div class="ask-text display" id="card-ask"></div>
+          <div class="flip-hint">Tap to reveal answer</div>
+        </div>
+      </div>
+      <div class="face back">
+        <div class="tag answer-tag mono">ANSWER</div>
+        <div class="answer-text mono" id="card-answer"></div>
+        <div class="section-block">
+          <div class="tag usecase-tag mono">USE CASE</div>
+          <div class="usecase-text" id="card-example"></div>
+        </div>
+        <div class="section-block">
+          <div class="tag steps-tag mono">STEP BY STEP</div>
+          <ol class="steps-list" id="card-breakdown"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="nav-btn" id="prev-btn">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div class="mid-controls">
+      <button class="mastery-btn review-btn" id="review-btn">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        Review again
+      </button>
+      <button class="mastery-btn know-btn" id="know-btn">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+        Got it
+      </button>
+    </div>
+    <button class="nav-btn" id="next-btn">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+const LEVELS = [
+{ id:1, key:"Foundations", title:"Foundations", subtitle:"let, in & basic syntax", cards:[
+{code:'let\n    Source = Excel.CurrentWorkbook(){[Name="Sales"]}[Content]\nin\n    Source', ask:"What do 'let' and 'in' do here?", answer:"'let' defines named steps; 'in' returns the final value.", example:"Every step you see in the Power Query UI compiles into a let-block like this behind the scenes.", breakdown:["The let block defines one step, Source, which loads the Sales sheet.","The in keyword returns whatever Source evaluates to.","Final result: the table stored in Source."]},
+{code:'Source = Excel.CurrentWorkbook(){[Name="Sales"]}[Content]', ask:"Is Source the same identifier as source?", answer:"No — M is case-sensitive.", example:'Referencing #"source" instead of Source raises an "identifier not found" error.', breakdown:["M treats identifiers literally, character for character.","'Source' and 'source' are two distinct names in the same scope.","Referencing the wrong case throws an identifier-not-found error rather than silently working."]},
+{code:'// Load raw sales data\nSource = Csv.Document(File.Contents("C:\\sales.csv"))', ask:"What does the // line do when this runs?", answer:"Nothing — it's a comment and is ignored.", example:"Comments let you document why a step exists without changing behavior.", breakdown:["The M parser reads // and ignores everything after it on that line.","Execution continues with the next real statement, Source = Csv.Document(...).","Final result: unaffected by the comment — Source loads the CSV as normal."]},
+{code:"/*\n  Step order:\n  1. Load\n  2. Filter\n  3. Clean\n*/", ask:"What kind of syntax is this?", answer:"A multi-line comment.", example:"Common at the top of a query to outline the overall transformation plan.", breakdown:["The /* opens a comment block and */ closes it.","Everything between the markers, including the numbered list, is skipped entirely.","It has zero effect on the query's evaluated result."]},
+{code:"let\n    Source = ...,\n    Filtered = Table.SelectRows(Source, each [Amount] > 0)\nin\n    Filtered", ask:"What is the comma after Source doing?", answer:"Separating this step from the next one.", example:"Drop that comma and Power Query throws a syntax error pointing right at the line.", breakdown:["Source is defined first as its own step.","The comma tells M 'another step follows' rather than ending the let block.","Filtered is then defined using Source; both steps chain together before 'in' returns Filtered."]},
+{code:'#"Filtered Rows" = Table.SelectRows(Source, each [Amount] > 0)', ask:'Why is the step name wrapped in #"..."?', answer:"Because the step name 'Filtered Rows' contains a space.", example:"This is exactly what Power Query auto-generates when you rename a step through the UI.", breakdown:["Power Query needs a single token for a step name.","Since 'Filtered Rows' contains a space, it's wrapped in #\"...\" to keep it as one identifier.","This makes #\"Filtered Rows\" referenceable elsewhere in the query just like any other step name."]},
+{code:"let\n    A = 1,\n    B = 2\nin\n    A + B", ask:"What does this query return?", answer:"3", example:"'in' isn't limited to a bare step name — any valid expression works there.", breakdown:["A is evaluated first and set to 1.","B is evaluated next and set to 2.","in A + B adds the two step values together.","Final result: 3."]},
+{code:"let\n    A    =   1  ,\n\n\n    B =2\nin\n  A+B", ask:"Does the odd spacing change the result?", answer:"No — it still returns 3.", example:"The formatter cleans this up visually, but the M engine ignores whitespace entirely.", breakdown:["The parser strips whitespace and line breaks before evaluating tokens.","A is still set to 1 and B is still set to 2, regardless of spacing.","A+B evaluates the same way as neatly formatted code.","Final result: 3."]},
+{code:"let\n    Step1 = 5\nin\n    Step1;", ask:"Is the trailing semicolon valid here?", answer:"No — it causes a syntax error.", example:"Unlike SQL or JavaScript, M queries never end statements with a semicolon.", breakdown:["M parses 'in Step1' as the return expression.","The trailing ; is not valid syntax after an expression in M.","The engine raises a syntax error instead of returning 5."]},
+{code:"let\n    A = 1,\n    B = 2,\nin\n    B", ask:"What's wrong with this query?", answer:"There's a trailing comma before 'in' — that's a syntax error.", example:"The last step before 'in' must never be followed by a comma.", breakdown:["A and B are defined as two steps separated by a comma.","The comma directly before 'in' incorrectly signals that another step should follow.","Since no step follows, M raises a syntax error rather than returning B."]},
+]},
+{ id:2, key:"DataTypes", title:"Data Types", subtitle:"text, number, list, record, table", cards:[
+{code:'"Hello World"', ask:"What data type is this value?", answer:"text", example:"Values imported from a CSV often start out as text until you set real types.", breakdown:["The value is wrapped in double quotes.","Double-quoted values are always the text type in M.","Final result: a text value containing Hello World."]},
+{code:"42", ask:"What data type is this value?", answer:"number", example:'Table.TransformColumnTypes(t, {{"Qty", Int64.Type}}) converts text like this into a true number.', breakdown:["The literal has no quotes and no decimal complexity.","M evaluates unquoted numeric literals as the number type.","Final result: the number 42."]},
+{code:"true", ask:"What type is this value?", answer:"logical", example:"Conditions like [Amount] > 0 inside Table.SelectRows always evaluate to a logical.", breakdown:["true and false are reserved keywords in M.","They always represent the logical type, not text or number.","Final result: a logical value of true."]},
+{code:"null", ask:"What does this represent?", answer:"A missing or absent value.", example:"Table.SelectRows(t, each [Email] <> null) drops rows with no email on file.", breakdown:["null is a reserved keyword representing 'no value'.","It's distinct from an empty text \"\" or the number 0.","Final result: the null value, meaning nothing is present."]},
+{code:"#date(2024, 3, 15)", ask:"What does this construct?", answer:"A date value: March 15, 2024.", example:"Date.AddDays(#date(2024,3,15), 7) returns March 22, 2024.", breakdown:["#date(...) is a type constructor for date values.","The three arguments are read as year, month, day.","Final result: the date value March 15, 2024."]},
+{code:"{1, 2, 3}", ask:"What type is this?", answer:"A list.", example:"List.Sum({1, 2, 3}) returns 6.", breakdown:["Curly braces { } construct a list literal.","Each comma-separated value becomes an ordered item in that list.","Final result: a list containing 1, 2, and 3 in that order."]},
+{code:'[Name = "Ana", Age = 30]', ask:"What type is this?", answer:"A record.", example:"Essentially one row of data, before it's placed inside a table.", breakdown:["Square brackets [ ] with name=value pairs construct a record.","Name is set to \"Ana\" and Age is set to 30.","Final result: a record with two named fields, Name and Age."]},
+{code:'#table({"Name","Age"}, {{"Ana",30},{"Ben",25}})', ask:"What does this construct?", answer:"A table with 2 columns and 2 rows.", example:"Handy for building a small lookup table directly inside a query.", breakdown:["#table(...) is a type constructor for tables.","The first argument lists column names: Name and Age.","The second argument supplies the rows as a list of lists.","Final result: a 2-row, 2-column table matching that data."]},
+{code:"let Add = (x, y) => x + y in Add", ask:"What does 'in Add' return here?", answer:"The function itself, not a number.", example:"Because Add was never called with (), the query hands back a callable function value.", breakdown:["Add is defined as a function value, not called yet.","in Add returns that function value directly, since no () follows it.","Final result: a callable function, not a number."]},
+{code:"1 is number", ask:"What does this evaluate to?", answer:"true", example:'Type checks like this guard a custom function: if not (x is number) then error "Expected a number".', breakdown:["'is' checks a value's type without converting it.","1 is a number literal, so the type check matches.","Final result: true."]},
+]},
+{ id:3, key:"References", title:"References & Access", subtitle:'each, _, #"...", [ ] vs { }', cards:[
+{code:"each [Amount] > 100", ask:"What is this shorthand for?", answer:"(_) => _[Amount] > 100", example:"Table.SelectRows(Source, each [Amount] > 100) filters rows over 100.", breakdown:["each is shorthand for a one-parameter function using _ as the parameter.","[Amount] inside an each is shorthand for _[Amount].","So the full expanded form is (_) => _[Amount] > 100.","Final result: a function that returns true/false based on each row's Amount."]},
+{code:"List.Transform({1,2,3}, each _ * 2)", ask:"What does this return?", answer:"{2, 4, 6}", example:"_ stands in for each list item as List.Transform iterates.", breakdown:["List.Transform iterates over each item in {1,2,3}.","For each item, _ holds that item's value and _ * 2 doubles it.","1 becomes 2, 2 becomes 4, 3 becomes 6.","Final result: {2, 4, 6}."]},
+{code:"Row[Total]", ask:"What does this do?", answer:"Reads the Total field out of record Row.", example:"Inside each [Total] * 1.1, [Total] is really shorthand for _[Total].", breakdown:["Row is treated as a record.","[Total] pulls the value stored under the Total field.","Final result: whatever value is stored in Row's Total field."]},
+{code:"MyList{0}", ask:"What does this return?", answer:"The first item in MyList.", example:"On {10,20,30}, MyList{0} returns 10 — list indexing starts at zero.", breakdown:["Curly braces on a list access an item by position.","Indexing starts at 0, so {0} is the first item.","Final result: 10, the first item in {10,20,30}."]},
+{code:"Source[Region]", ask:"What does this return, given Source is a table?", answer:"The entire Region column, as a list.", example:"List.Distinct(Source[Region]) returns the unique region values.", breakdown:["Square brackets on a table access an entire column by name.","Region is that column, pulled out as a standalone list.","Final result: a list of every Region value in Source, in row order."]},
+{code:"Source{0}", ask:"What does this return, given Source is a table?", answer:"The first row of Source, as a record.", example:"Source{0}[Region] chains both: first row, then its Region field.", breakdown:["Curly braces on a table access a row by position.","{0} retrieves the first row.","Final result: a record representing that first row's fields and values."]},
+{code:'#"Merged Query"[CustomerID]', ask:"What's happening syntactically here?", answer:"Accessing the CustomerID field of a step literally named 'Merged Query'.", example:'The #"..." is only needed for the step name — field access still just uses [ ].', breakdown:['#"Merged Query" resolves to the step with that exact (spaced) name.',"[CustomerID] then accesses the CustomerID field on whatever that step returns.","Final result: the CustomerID value or column from the Merged Query step."]},
+{code:'{ "a", "b", "c" }{1}', ask:"What does this return?", answer:'"b"', example:"Quick way to grab the 2nd item without writing a full List.Transform.", breakdown:['The list literal creates three items: "a", "b", "c" at positions 0, 1, 2.',"{1} retrieves the item at position 1.",'Final result: "b".']},
+{code:"(x) => x * x", ask:"What kind of value is this?", answer:"A custom function.", example:"Assign it, e.g. Square = (x) => x * x, then call Square(5) to get 25.", breakdown:["(x) => ... defines a function taking one parameter, x.","The body x * x squares whatever x is when the function is called.","Final result: a function value, not yet evaluated to a number."]},
+{code:"Square(5)   // where Square = (x) => x * x", ask:"What does this do?", answer:"Calls the function, returning 25.", example:"Parentheses ( ) always mean 'invoke this function with these arguments.'", breakdown:["Square is called with the argument 5.","Inside the function, x is bound to 5.","The body computes 5 * 5.","Final result: 25."]},
+]},
+{ id:4, key:"Operators", title:"Operators", subtitle:"&, comparisons, logic, ??", cards:[
+{code:'[First] & " " & [Last]   // First="Ana", Last="Lee"', ask:"What does this return?", answer:'"Ana Lee"', example:"Building a FullName column is one of the most common uses of &.", breakdown:['[First] evaluates to "Ana".','" " is a literal space.','[Last] evaluates to "Lee".',"& concatenates all three left to right.",'Final result: "Ana Lee".']},
+{code:"[Price] + [Tax]", ask:"What does this do?", answer:"Adds two numeric fields together.", example:"Using & here instead of + would raise an error, since & is for text.", breakdown:["[Price] and [Tax] are both read as numbers.","+ performs numeric addition on them.","Final result: the sum of Price and Tax."]},
+{code:'[Status] <> "Closed"', ask:"What does this check?", answer:'Whether Status is not equal to "Closed".', example:'Table.SelectRows(t, each [Status] <> "Closed") keeps only open items.', breakdown:['[Status] is compared against the text "Closed".',"<> checks for inequality.",'Final result: true if Status is anything other than "Closed", otherwise false.']},
+{code:'[Age] >= 18 and [Country] = "US"', ask:"What must be true for this to return true?", answer:"Both conditions: age 18+ AND country is US.", example:"A common multi-condition filter used inside Table.SelectRows.", breakdown:["[Age] >= 18 evaluates to true or false on its own.",'[Country] = "US" separately evaluates to true or false.',"and combines them, only true if both sides are true.","Final result: a single logical value requiring both conditions."]},
+{code:'[MiddleName] ?? "N/A"', ask:"What does this return if MiddleName is null?", answer:'"N/A"', example:"A quick way to supply a default value without a full if/then/else.", breakdown:["?? first checks whether [MiddleName] is null.","If it isn't null, that value is returned as-is.",'If it is null, "N/A" is returned instead.','Final result: "N/A" specifically when MiddleName is null.']},
+{code:"[Score] > 90", ask:"What kind of value does this expression produce?", answer:"A logical (true/false) value.", example:"That's exactly the kind of value 'if' and Table.SelectRows expect as a condition.", breakdown:["[Score] is read as a number.","> compares it against 90.","Final result: a logical value, true or false, never a number."]},
+{code:"5 is text", ask:"What does this evaluate to?", answer:"false", example:"5 is text checks the type; as text would instead try to convert it.", breakdown:["5 is evaluated first — it's a number literal.","is text checks whether that value's type matches text.","Final result: false, since 5 is a number, not text."]},
+{code:"[Weight] as number", ask:"What is 'as' doing here?", answer:"Asserting/ascribing that Weight must be a number.", example:"Common inside function parameter declarations: (Weight as number) => ...", breakdown:["as asserts that [Weight] must conform to the number type.","If [Weight] is already numeric, it's returned unchanged.","If it isn't, M raises a type-mismatch error.","Final result: the number value of Weight, or an error."]},
+{code:"x = x + 1", ask:"Does M support shorthand like x += 1 for this?", answer:"No — you always write the full expression.", example:"M has no increment or compound-assignment operators.", breakdown:["The right side x + 1 is evaluated using the current value of x.","The result is assigned as the new value of x.","This is one full statement — M has no shorthand operator for it."]},
+{code:"-[Balance]", ask:"What does this do?", answer:"Negates the Balance value.", example:'Table.AddColumn(t, "Owed", each -[Balance]) flips a credit into a debit.', breakdown:["[Balance] is read as a number.","The unary minus flips its sign.","Final result: the negative of Balance's value."]},
+]},
+{ id:5, key:"ControlFlow", title:"Control Flow", subtitle:"if/then/else, try/otherwise", cards:[
+{code:'if [Amount] > 100 then "High" else "Low"   // Amount = 150', ask:"What does this return?", answer:'"High"', example:"A common pattern inside Table.AddColumn to bucket values into categories.", breakdown:["The condition [Amount] > 100 is evaluated first: 150 > 100 is true.","Since the condition is true, the then branch runs.",'Final result: "High".']},
+{code:'if [Score] > 90 then "A"', ask:"Is this valid M on its own?", answer:"No — it's missing the required 'else'.", example:"Every if needs an else, since M expressions must always resolve to a value.", breakdown:["M parses the if expression and expects a matching else.","No else is found, so the expression is incomplete.","Final result: a syntax error, not a value."]},
+{code:'if [Score]>90 then "A" else if [Score]>75 then "B" else "C"   // Score = 80', ask:"What does this return?", answer:'"B"', example:"Chained else-if is how you build multi-tier grading or bucketing logic.", breakdown:["[Score]>90 is checked first: 80>90 is false.","The else branch is checked next: [Score]>75: 80>75 is true.","Since that condition is true, its result is returned.",'Final result: "B".']},
+{code:"try [Amount]/[Qty] otherwise 0   // Qty = 0", ask:"What does this return?", answer:"0", example:"Prevents a divide-by-zero error from crashing the whole query.", breakdown:["[Amount]/[Qty] is attempted first: dividing by 0 raises an error.","try catches that error instead of letting it propagate.","otherwise supplies the fallback value 0.","Final result: 0."]},
+{code:"try 10/0", ask:"What does this return (no otherwise)?", answer:"A record like [HasError = true, Error = ...].", example:"You'd typically check (try 10/0)[HasError] before deciding what to do next.", breakdown:["10/0 is attempted and raises a division error.","try catches the error and wraps it in a record instead of crashing.","Final result: a record shaped like [HasError = true, Error = ...]."]},
+{code:'error "Invalid input"', ask:"What happens when this is evaluated?", answer:"It raises a custom error and halts that step.", example:"Useful inside a custom function to reject bad arguments early.", breakdown:["The error keyword immediately raises a custom error.","Evaluation of that step stops right there.",'Final result: no value — an error is thrown with the message "Invalid input".']},
+{code:'Error.Record("Invalid", "Amount can\'t be negative", [Amount])', ask:"What is this building?", answer:"A structured error with a reason, message, and extra detail.", example:"More informative than a plain error string when you're debugging later.", breakdown:["Error.Record takes a reason, a message, and extra detail.","It packages all three into one structured error value.","Final result: a detailed error object, not yet raised until used with 'error'."]},
+{code:"(try [Amount]/[Qty])[HasError]", ask:"What does this return?", answer:"true or false, depending on whether the division errored.", example:"Feed this straight into an 'if' to branch on success or failure.", breakdown:["try [Amount]/[Qty] runs first, producing a record either way.","That record always includes a HasError field.","[HasError] reads just that field off the record.","Final result: true if the division failed, false if it succeeded."]},
+{code:"Table.SelectRows(t, each not (try [A]/[B])[HasError])", ask:"What does this do?", answer:"Keeps only rows where [A]/[B] doesn't error.", example:"Filters out rows that would, say, divide by zero.", breakdown:["For each row, [A]/[B] is attempted inside a try.","(try [A]/[B])[HasError] returns true if that row's division failed.","not flips it, so rows are kept only when there was no error.","Final result: a table containing only the rows where [A]/[B] succeeded."]},
+{code:'if 5 then "yes" else "no"', ask:"What happens when this runs?", answer:"It errors — 5 isn't a logical value.", example:"'if' conditions must evaluate to true/false, never a number.", breakdown:["The condition 5 is evaluated first.","if requires a logical (true/false) condition, and 5 is a number.","Final result: a type-mismatch error is raised instead of returning a value."]},
+]},
+{ id:6, key:"TableFnsI", title:"Table Functions I", subtitle:"select, add, remove, rename", cards:[
+{code:"Table.SelectRows(Source, each [Amount] > 100)", ask:"What does this return?", answer:"A table with only the rows where Amount > 100.", example:"This is the M behind the 'Filter Rows' UI dropdown.", breakdown:["Source is the starting table.","each row's Amount is checked against > 100.","Rows failing the check are dropped; rows passing it are kept.","Final result: a table with only rows where Amount > 100."]},
+{code:'Table.AddColumn(Source, "Total", each [Price] * [Qty])', ask:"What does this do?", answer:"Adds a new 'Total' column, computed per row.", example:"Equivalent to using the 'Add Custom Column' dialog.", breakdown:["Source is the starting table.","For each row, [Price] * [Qty] is computed.","That computed value is placed into a new column named Total.","Final result: Source's original columns plus a new Total column."]},
+{code:'Table.RemoveColumns(Source, {"Notes", "Internal ID"})', ask:"What does this return?", answer:"Source without the Notes and Internal ID columns.", example:"Cleans up helper columns you no longer need before loading.", breakdown:["Source is the starting table with its full column list.",'The list {"Notes","Internal ID"} names which columns to drop.',"Those two columns are removed from every row.","Final result: Source without Notes or Internal ID."]},
+{code:'Table.RenameColumns(Source, {{"Amt", "Amount"}})', ask:"What does this do?", answer:"Renames the Amt column to Amount.", example:"Even a single rename needs a list-of-pairs, {{ ... }}.", breakdown:["Source has a column named Amt.",'The pair {"Amt","Amount"} maps the old name to the new one.',"That column's header is updated in place.","Final result: the same table, with Amt now labeled Amount."]},
+{code:'Table.SelectColumns(Source, {"Name", "Email"})', ask:"What does this return?", answer:"A table with only the Name and Email columns.", example:"Handy for trimming a wide table down to just what's needed downstream.", breakdown:["Source may have many columns.","The list names exactly which ones to keep: Name and Email.","All other columns are dropped.","Final result: a table with only the Name and Email columns."]},
+{code:'Table.ReorderColumns(Source, {"Date", "Amount", "Name"})', ask:"What does this change?", answer:"The left-to-right order of the columns.", example:"Useful for making key columns appear first for readers.", breakdown:["Source's columns start in their original order.","The list gives the new desired left-to-right order.","Column data itself doesn't change, only its position.","Final result: the same data, reordered as Date, Amount, Name."]},
+{code:'Table.Sort(Source, {{"Date", Order.Descending}})', ask:"What does this return?", answer:"Source sorted with the newest dates first.", example:"The M behind clicking the sort arrow on a column header.", breakdown:["Source's rows start in their original order.","Each row's Date value is compared against the others.","Order.Descending arranges the newest dates first.","Final result: Source's rows sorted from newest to oldest Date."]},
+{code:'Table.Distinct(Source, {"Email"})', ask:"What does this return?", answer:"Rows with unique Email values — duplicates removed.", example:"Useful for de-duplicating a mailing list before export.", breakdown:["Source may contain repeated Email values across rows.","Table.Distinct scans rows and keeps only the first occurrence of each Email.","Final result: a table with one row per unique Email."]},
+{code:"Table.RowCount(Source)", ask:"What does this return?", answer:"The number of rows in Source, as a plain number.", example:'if Table.RowCount(Source) = 0 then error "No data" else Source is a common guard.', breakdown:["Source is the table being measured.","Every row is counted, regardless of column values.","Final result: a single number representing the row count."]},
+{code:"Table.FirstN(Source, 5)", ask:"What does this return?", answer:"The first 5 rows of Source.", example:"Table.Skip(Source, 5) would instead drop the first 5 and keep the rest.", breakdown:["Source's rows are read in their current order.","The first 5 rows are selected.","Everything after row 5 is discarded.","Final result: a table containing just those first 5 rows."]},
+]},
+{ id:7, key:"TableFnsII", title:"Table Functions II", subtitle:"transform, group, join, pivot", cards:[
+{code:'Table.TransformColumnTypes(Source, {{"Amount", type number}})', ask:"What does this do?", answer:"Converts the Amount column to a numeric type.", example:"The default 'Changed Type' step Power Query adds after loading data.", breakdown:["Source's Amount column may currently be text or another type.",'The pair {"Amount", type number} tells M to reinterpret that column.',"Every value in Amount is converted to a numeric type.","Final result: the same table with Amount now typed as number."]},
+{code:'Table.TransformColumns(Source, {{"Name", Text.Upper}})', ask:"What does this do?", answer:"Uppercases every existing value in the Name column.", example:"Unlike AddColumn, this changes values in place rather than creating a new column.", breakdown:["Source's Name column holds existing text values.","Text.Upper is applied to every value in that column.","Each value is replaced with its uppercase version.","Final result: the same table with Name fully uppercased."]},
+{code:'Table.Group(Source, {"Region"}, {{"Total", each List.Sum([Sales]), type number}})', ask:"What does this return?", answer:"One row per Region, with Sales totaled for each.", example:"Equivalent to SQL's GROUP BY Region with SUM(Sales).", breakdown:["Source's rows are bucketed by matching Region values.","Within each bucket, [Sales] is collected as a list.","List.Sum adds up that list to produce one Total per Region.","Final result: one row per Region, each with a summed Total."]},
+{code:'Table.Pivot(Source, {"Q1","Q2"}, "Quarter", "Revenue")', ask:"What does this generally do?", answer:"Turns row values from a Quarter column into their own separate columns.", example:"Common for reshaping long data into a wide summary layout.", breakdown:["Source has a Quarter column containing values like Q1 and Q2.","Table.Pivot looks for rows where Quarter equals Q1 or Q2.","Those distinct values become new column headers.","The matching Revenue values fill in under each new column.","Final result: a wider table with Q1 and Q2 as columns."]},
+{code:'Table.NestedJoin(Orders, "CustomerID", Customers, "ID", "CustomerData")', ask:"What does this add to Orders?", answer:"A new column holding the matching Customer row(s) for each order.", example:"Usually followed by Table.ExpandTableColumn to pull specific fields out.", breakdown:["Each row in Orders is matched by CustomerID against Customers' ID column.","All matching Customers rows for that order are gathered together.","They're packed into a new column called CustomerData, as a nested table.","Final result: Orders with an added CustomerData column of matched rows."]},
+{code:"Table.Combine({SalesJan, SalesFeb, SalesMar})", ask:"What does this return?", answer:"One table with all rows from the three tables stacked together.", example:"Common when combining multiple monthly export files into one table.", breakdown:["Each of the three tables is read in turn.","Their rows are appended one after another into a single result.","Column names are matched up across the tables.","Final result: one table containing every row from all three months."]},
+{code:'Table.ExpandTableColumn(Source, "CustomerData", {"Name", "Email"})', ask:"What does this do?", answer:"Pulls Name and Email out of the nested CustomerData column into their own columns.", example:"The step Power Query auto-adds right after a merge/join.", breakdown:["Source's CustomerData column holds nested tables from an earlier join.","For each row, Name and Email are pulled out of that nested table.","Those values become new top-level columns.","Final result: Source with CustomerData replaced by flat Name and Email columns."]},
+{code:'Table.FillDown(Source, {"Category"})', ask:"What does this do?", answer:"Fills blank Category cells using the last non-blank value above them.", example:"Fixes 'merged-cell' style Excel exports where a category is only listed once per group.", breakdown:["Source's Category column has some blank cells below filled-in ones.","Table.FillDown scans top to bottom.","Each blank is replaced with the nearest non-blank value above it.","Final result: Category fully populated, no gaps left."]},
+{code:'Table.ReplaceValue(Source, "N/A", null, Replacer.ReplaceValue, {"Notes"})', ask:"What does this do?", answer:'Replaces the text "N/A" with null in the Notes column.', example:"Cleans up placeholder text so it's treated as genuinely missing data.", breakdown:['Source\'s Notes column is scanned for the exact text "N/A".',"Replacer.ReplaceValue defines a direct value swap.",'Every matching "N/A" is replaced with null.','Final result: Notes with "N/A" placeholders turned into true nulls.']},
+{code:'Table.SplitColumn(Source, "FullName", Splitter.SplitTextByDelimiter(" "))', ask:"What does this do?", answer:"Splits FullName into multiple columns wherever there's a space.", example:"Turns 'Ana Lee' into separate FirstName / LastName-style columns.", breakdown:['Source\'s FullName column holds values like "Ana Lee".','Splitter.SplitTextByDelimiter(" ") defines the space as the split point.',"Each FullName value is broken into pieces at that space.","Final result: FullName replaced by multiple columns, one per piece."]},
+]},
+{ id:8, key:"TextNumberDate", title:"Text, Number & Date", subtitle:"the built-in function families", cards:[
+{code:'Text.Upper("hello")', ask:"What does this return?", answer:'"HELLO"', example:'Table.TransformColumns(t, {{"Code", Text.Upper}}) normalizes product codes.', breakdown:['"hello" is the input text.',"Text.Upper converts every letter to uppercase.",'Final result: "HELLO".']},
+{code:'Text.Contains([Email], "@gmail.com")', ask:"What does this return?", answer:"true or false, depending on whether Email contains that text.", example:'Table.SelectRows(t, each Text.Contains([Email], "@gmail.com")) finds Gmail users.', breakdown:["[Email] is read as a text value.",'Text.Contains checks whether "@gmail.com" appears anywhere inside it.',"Final result: true if found, false otherwise."]},
+{code:'Text.Split("a,b,c", ",")', ask:"What does this return?", answer:'{"a", "b", "c"}', example:"Often used right before Table.SplitColumn-style transformations.", breakdown:['"a,b,c" is the input text.',"Text.Split breaks it apart wherever a comma appears.",'Final result: {"a", "b", "c"}.']},
+{code:'Text.Combine({"a","b","c"}, "-")', ask:"What does this return?", answer:'"a-b-c"', example:"Handy for building a composite key from several columns.", breakdown:['The list {"a","b","c"} is read in order.','Text.Combine joins the items together using "-" between each.','Final result: "a-b-c".']},
+{code:'Text.Trim("  hello  ")', ask:"What does this return?", answer:'"hello"', example:"Cleans up messy copy-pasted data with stray leading/trailing spaces.", breakdown:['"  hello  " has leading and trailing spaces.',"Text.Trim removes whitespace from both ends.",'Final result: "hello", with no surrounding spaces.']},
+{code:"Number.Round(3.14159, 2)", ask:"What does this return?", answer:"3.14", example:"Common right before displaying a price or a percentage.", breakdown:["3.14159 is the input number.","The second argument, 2, sets how many decimal places to keep.","Final result: 3.14."]},
+{code:'Number.From("42")', ask:"What does this return?", answer:"42, as a real number rather than text.", example:"Fixes columns that imported as text but should be numeric.", breakdown:['"42" starts as a text value.',"Number.From parses that text into a numeric value.","Final result: the number 42, no longer text."]},
+{code:"Date.Year(#date(2024,3,15))", ask:"What does this return?", answer:"2024", example:'Table.AddColumn(t, "Year", each Date.Year([OrderDate])) buckets orders by year.', breakdown:["#date(2024,3,15) constructs a date value first.","Date.Year reads just the year component from it.","Final result: 2024."]},
+{code:"Date.AddMonths(#date(2024,1,31), 1)", ask:"What does this roughly return?", answer:"A date in late February 2024 (the engine adjusts for the shorter month).", example:"Common for calculating renewal or due dates.", breakdown:["#date(2024,1,31) is the starting date.","Date.AddMonths shifts it forward by 1 month.","Since February has fewer days, M adjusts to the closest valid date.","Final result: a date around February 29, 2024."]},
+{code:"DateTime.LocalNow()", ask:"What does this return?", answer:"The current local date and time.", example:'Table.AddColumn(t, "Loaded", each DateTime.LocalNow()) timestamps when a query ran.', breakdown:["DateTime.LocalNow() reads the current system clock.","It captures both the date and the time of day.","Final result: the current local date and time at the moment the query runs."]},
+]},
+{ id:9, key:"ListsRecordsFns", title:"Lists, Records & Custom Fns", subtitle:"map/filter, (x) => ...", cards:[
+{code:"List.Sum({10, 20, 30})", ask:"What does this return?", answer:"60", example:'Table.Group(..., {{"Total", each List.Sum([Sales])}}) uses this inside an aggregation.', breakdown:["{10,20,30} is the input list.","List.Sum adds every item together.","Final result: 60."]},
+{code:"List.Select({1,2,3,4}, each _ > 2)", ask:"What does this return?", answer:"{3, 4}", example:"The list equivalent of Table.SelectRows, for filtering plain lists.", breakdown:["Each item in {1,2,3,4} is checked against the condition _ > 2.","1 and 2 fail the check; 3 and 4 pass.","Final result: {3, 4}."]},
+{code:"List.Transform({1,2,3}, each _ * 10)", ask:"What does this return?", answer:"{10, 20, 30}", example:"M's 'map' — apply a calculation to every item in a list at once.", breakdown:["Each item in {1,2,3} is multiplied by 10 in turn.","1 becomes 10, 2 becomes 20, 3 becomes 30.","Final result: {10, 20, 30}."]},
+{code:'List.Contains({"A","B","C"}, "B")', ask:"What does this return?", answer:"true", example:"Table.SelectRows(t, each List.Contains(ValidCodes, [Code])) filters against an allow-list.", breakdown:['The list {"A","B","C"} is scanned for a match.','"B" is found among the items.',"Final result: true."]},
+{code:"List.Distinct({1,1,2,2,3})", ask:"What does this return?", answer:"{1, 2, 3}", example:"A quick way to get unique values without building a whole table.", breakdown:["The list {1,1,2,2,3} is scanned in order.","Repeated values are collapsed, keeping only the first occurrence.","Final result: {1, 2, 3}."]},
+{code:'Record.Field([Name="Ana", Age=30], "Age")', ask:"What does this return?", answer:"30", example:"Useful when the field name you want is stored in a variable, not hardcoded.", breakdown:['The record [Name="Ana",Age=30] is the input.','Record.Field looks up the field named "Age" by that text name.',"Final result: 30."]},
+{code:'Record.FieldNames([Name="Ana", Age=30])', ask:"What does this return?", answer:'{"Name", "Age"}', example:"Handy for dynamically checking which fields exist before referencing them.", breakdown:["The record has two fields defined: Name and Age.","Record.FieldNames reads off just their names, not their values.",'Final result: {"Name", "Age"}.']},
+{code:'Record.ToTable([Name="Ana", Age=30])', ask:"What does this return?", answer:"A 2-column table listing each field name and its value.", example:"Great for quickly inspecting an unfamiliar record's shape.", breakdown:["The record's fields are Name and Age.","Record.ToTable converts each field into its own row.","Each row gets a Name column (the field's name) and a Value column (its value).",'Final result: a 2-row table listing Name/"Ana" and Age/30.']},
+{code:"let Square = (x) => x * x in Square", ask:"What is Square here?", answer:"A reusable custom function.", example:"Once defined, Square(6) anywhere later in the query returns 36.", breakdown:["Square is defined as a function taking one parameter.","in Square returns that function value directly, uncalled.","Final result: a reusable function, ready to be invoked later as Square(...)."]},
+{code:"let Add = (x, y) => x + y in Add(3, 4)", ask:"What does this query return?", answer:"7", example:"Custom functions pay off most when the same calculation repeats across many steps.", breakdown:["Add is defined as a two-parameter function.","Add(3,4) calls it with x=3 and y=4.","The body computes 3 + 4.","Final result: 7."]},
+]},
+{ id:10, key:"Advanced", title:"Advanced M", subtitle:"folding, #shared, @, types", cards:[
+{code:'Table.SelectRows(\n  Sql.Database("srv","db"){[Schema="dbo",Item="Orders"]}[Data],\n  each [Amount] > 100\n)', ask:"Why is this likely fast even on a huge table?", answer:"Because the filter can 'fold' back into a SQL WHERE clause at the source.", example:"Query folding lets SQL Server do the filtering instead of Power Query.", breakdown:["Sql.Database(...) connects to the SQL source and exposes its tables.","[Data] retrieves the Orders table as an M table value.","Table.SelectRows adds a filter condition on top of that table.","Because the source is a database, M translates the filter into SQL and lets the server apply it.","Final result: only matching rows are returned, filtered efficiently at the source."]},
+{code:"Table.Buffer(Source)", ask:"What does this do, and what's the tradeoff?", answer:"Loads Source fully into memory now; this breaks query folding for steps after it.", example:"Used when you need a stable snapshot, e.g. before a step that reads Source more than once.", breakdown:["Source would normally be evaluated lazily, step by step, possibly against a live connection.","Table.Buffer forces the entire table to be read into memory right now.","Any steps built on this buffered copy no longer fold back to the original source.","Final result: a fixed, in-memory snapshot of Source."]},
+{code:"#shared", ask:"What does this return?", answer:"A record listing every built-in and custom function/query currently in scope.", example:"Type #shared into a blank query to browse the whole function library.", breakdown:["#shared has no arguments — it reads the current evaluation environment.","It gathers every built-in function together with any custom queries defined in the file.","Final result: one large record mapping names to all of those function/query values."]},
+{code:"let Fact = (n) => if n = 0 then 1 else n * @Fact(n-1) in Fact(5)", ask:"What does this return, and what does @ do?", answer:"120 — the @ lets the function call itself recursively.", example:"Without @, Fact can't reliably resolve its own name from inside its own body.", breakdown:["Fact(5) checks if n=0: false, so it computes 5 * @Fact(4).","@Fact(4) checks n=0: false, computes 4 * @Fact(3).","This continues down to @Fact(0), which returns 1 since n=0 is true.","The results multiply back up: 1×1×2×3×4×5.","Final result: 120."]},
+{code:"let A = 1/0, B = 5 in B", ask:"Does this query error?", answer:"No — A is never evaluated, since only B is returned.", example:"This is lazy evaluation: unused steps are never actually computed.", breakdown:["M evaluates lazily — steps are only computed when something needs their value.","in B only asks for B's value, never A's.","Since nothing references A, the 1/0 error inside it is never triggered.","Final result: 5, with no error raised."]},
+{code:"Table.Schema(Source)", ask:"What does this return?", answer:"A table describing each column's name, type, and other metadata.", example:"Great for debugging why a TransformColumnTypes step isn't behaving as expected.", breakdown:["Source is the table being inspected.","Table.Schema reads structural metadata rather than the row data itself.","It reports each column's name, data type, and other properties.","Final result: a table describing Source's structure, one row per column."]},
+{code:'Error.Record("Validation", "Negative amount", [Amount])', ask:"What is this building?", answer:"A structured error object with a reason, message, and detail.", example:'More useful for debugging than a bare error "message" string.', breakdown:['"Validation" is stored as the error\'s reason.','"Negative amount" is stored as the human-readable message.',"[Amount] is attached as additional detail for debugging.","Final result: a structured error value, ready to be raised with the 'error' keyword."]},
+{code:"type table [Amount = number, Name = text]", ask:"What is this?", answer:"A type declaration describing a table's expected column names and types.", example:"Often used to ascribe a precise return type on a custom function.", breakdown:["type table starts a table type declaration.","Amount is declared to require the number type.","Name is declared to require the text type.","Final result: a type value describing the expected shape of a table, not actual data."]},
+{code:"Value.Type(5)", ask:"What does this return?", answer:"The type value 'number'.", example:"Useful inside a custom function to branch behavior based on an argument's type.", breakdown:["5 is evaluated first as a plain number.","Value.Type inspects that value and reports its type rather than its value.","Final result: the type value 'number'."]},
+{code:"Function.Invoke(Add, {3, 4})   // Add = (x,y) => x+y", ask:"What does this do?", answer:"Calls Add with arguments 3 and 4, returning 7.", example:"Useful when the number or order of arguments is only known at runtime.", breakdown:["Add is the function value being called.","{3,4} supplies its arguments as a list instead of writing Add(3,4) directly.","Function.Invoke matches list items to parameters in order: x=3, y=4.","The body computes 3+4.","Final result: 7."]},
+]},
+];
+
+let screen = "levels";
+let levelIdx = 0;
+let order = [];
+let pos = 0;
+let flipped = false;
+const known = {};
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function progressFor(lvl) { return known[lvl.id] ? known[lvl.id].size : 0; }
+
+const levelListEl = document.getElementById("level-list");
+function renderLevels() {
+  levelListEl.innerHTML = "";
+  LEVELS.forEach((lvl, i) => {
+    const p = progressFor(lvl);
+    const total = lvl.cards.length;
+    const num = String(lvl.id).padStart(2, "0");
+    const btn = document.createElement("button");
+    btn.className = "level-btn";
+    btn.innerHTML = `
+      <span class="lhs">
+        <span class="muted">Level${num}_${lvl.key}</span>
+        <span class="muted"> = </span>
+        <span class="str">"${lvl.title}"</span><span class="muted">,</span>
+      </span>
+      <span class="rhs">
+        <span style="font-size:12px;color:${p === total ? 'var(--success)' : 'var(--muted)'}">${p}/${total}</span>
+        <span class="dot ${p === total ? 'done' : p > 0 ? 'some' : ''}"></span>
+      </span>`;
+    btn.addEventListener("click", () => enterLevel(i));
+    levelListEl.appendChild(btn);
+  });
+}
+
+const levelsScreenEl = document.getElementById("levels-screen");
+const cardScreenEl = document.getElementById("card-screen");
+const lvlNameEl = document.getElementById("lvl-name");
+const lvlPosEl = document.getElementById("lvl-pos");
+const progressFillEl = document.getElementById("progress-fill");
+const flipCardEl = document.getElementById("flip-card");
+const cardCodeEl = document.getElementById("card-code");
+const cardAskEl = document.getElementById("card-ask");
+const cardAnswerEl = document.getElementById("card-answer");
+const cardExampleEl = document.getElementById("card-example");
+const cardBreakdownEl = document.getElementById("card-breakdown");
+
+function currentCard() {
+  const lvl = LEVELS[levelIdx];
+  const realIdx = order[pos];
+  return lvl.cards[realIdx];
+}
+
+function renderCard() {
+  const lvl = LEVELS[levelIdx];
+  const card = currentCard();
+  lvlNameEl.textContent = lvl.title;
+  lvlPosEl.textContent = `${pos + 1} / ${order.length}`;
+  progressFillEl.style.width = `${((pos + 1) / order.length) * 100}%`;
+  cardCodeEl.textContent = card.code;
+  cardAskEl.textContent = card.ask;
+  cardAnswerEl.textContent = card.answer;
+  cardExampleEl.textContent = card.example;
+  cardBreakdownEl.innerHTML = "";
+  card.breakdown.forEach((step) => {
+    const li = document.createElement("li");
+    li.textContent = step;
+    cardBreakdownEl.appendChild(li);
+  });
+  flipCardEl.classList.toggle("flipped", flipped);
+}
+
+function enterLevel(idx) {
+  levelIdx = idx;
+  order = shuffle([...Array(LEVELS[idx].cards.length).keys()]);
+  pos = 0;
+  flipped = false;
+  screen = "cards";
+  levelsScreenEl.style.display = "none";
+  cardScreenEl.style.display = "flex";
+  renderCard();
+}
+
+function backToLevels() {
+  screen = "levels";
+  cardScreenEl.style.display = "none";
+  levelsScreenEl.style.display = "block";
+  renderLevels();
+}
+
+function reshuffle() {
+  order = shuffle(order);
+  pos = 0;
+  flipped = false;
+  renderCard();
+}
+
+function goNext() {
+  flipped = false;
+  pos = (pos + 1) % order.length;
+  renderCard();
+}
+function goPrev() {
+  flipped = false;
+  pos = (pos - 1 + order.length) % order.length;
+  renderCard();
+}
+
+function setMastery(isKnown) {
+  const lvl = LEVELS[levelIdx];
+  const realIdx = order[pos];
+  if (!known[lvl.id]) known[lvl.id] = new Set();
+  if (isKnown) known[lvl.id].add(realIdx);
+  else known[lvl.id].delete(realIdx);
+  goNext();
+}
+
+document.getElementById("flip-zone").addEventListener("click", (e) => {
+  if (e.target.closest(".face")) {
+    flipped = !flipped;
+    flipCardEl.classList.toggle("flipped", flipped);
+  }
+});
+document.getElementById("back-btn").addEventListener("click", backToLevels);
+document.getElementById("shuffle-btn").addEventListener("click", reshuffle);
+document.getElementById("prev-btn").addEventListener("click", goPrev);
+document.getElementById("next-btn").addEventListener("click", goNext);
+document.getElementById("review-btn").addEventListener("click", () => setMastery(false));
+document.getElementById("know-btn").addEventListener("click", () => setMastery(true));
+
+document.addEventListener("keydown", (e) => {
+  if (screen !== "cards") return;
+  if (e.key === "ArrowRight") goNext();
+  else if (e.key === "ArrowLeft") goPrev();
+  else if (e.key === " " || e.key === "Enter") {
+    e.preventDefault();
+    flipped = !flipped;
+    flipCardEl.classList.toggle("flipped", flipped);
+  }
+});
+
+renderLevels();
+</script>
+</body>
+</html>
